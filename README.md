@@ -1,9 +1,12 @@
+
 # Raster fonts for EGA text mode
 Clavis Boot/Clavis EGA font created initially for my own operating system project. Currently it supports only `437` (US-ASCII) and `852` (DOS-Central Europe) code pages.
 
 * `clvsbtus.sys` - Clavis Boot US (CP437)
 * `clvsbtce.sys` - Clavis Boot CE (CP852)
 * `claviseg.cpi` - Clavis EGA Font for DOS (CP437, CP852)
+
+![Clavis EGA Font for DOS on MS-DOS 8](docs/screenshot-claviseg-msdos8.png)
 
 ## Building
 To build SYS and CPI files the Netwide Assembler (NASM) is needed.
