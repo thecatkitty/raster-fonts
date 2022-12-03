@@ -1,5 +1,7 @@
 
-# Raster fonts for EGA text mode
+This repository contains some raster fonts created by me over the years. Currently, it's only Clavis (monospaced) and Gidotto (proportional). All of my fonts are going to be placed here eventually in a source form, but for now, Clavis provides binaries, Gidotto does not.
+
+# Clavis
 Clavis Boot/Clavis EGA font created initially for my own operating system project. Currently it supports only `437` (US-ASCII) and `852` (DOS-Central Europe) code pages.
 
 * `clvsbtus.sys` - Clavis Boot US (CP437)
@@ -32,3 +34,8 @@ mode con codepage select=<code page>
 ````
 
 Remember that currently only 437 and 852 code pages are supported!
+
+# Gidotto
+Gidotto is a proportional bitmap font, 8 pixels high, created for Demistar event signage system. It is loosely inspired by Gidole.
+
+![Gidotto 8 / Jackdaws love my big sphinx of quartz / Zażółć gęślą jaźń. 0123456789](docs/sample-gidotto.png)
