@@ -6,6 +6,8 @@ Currently, it's only Clavis (monospaced) and Gidotto (proportional).
 Clavis Regular font created initially for my own operating system project.
 Currently it supports only `437` (US-ASCII) and `852` (DOS-Central Europe) code pages.
 
+Clavis Bold variant only supports `852` (DOS-Central Europe) code page.
+
 ![Clavis Regular Font on MS-DOS 8](docs/screenshot-claviseg-msdos8.png)
 
 ## Building
@@ -15,7 +17,7 @@ To build binary font files, make, Python and monobit are needed.
 python -m venv venv
 source venv/bin/activate
 pip install monobit
-make clavis
+make clavis clavis-bold
 ```
 
 ## Installation in MS-DOS

@@ -1,4 +1,4 @@
-all: clavis
+all: clavis clavis-bold
 
 clean:
 	rm -rf out
@@ -7,6 +7,10 @@ clean:
 clavis: \
 	out/clavis.yaff \
 	out/clavis.cpi
+
+clavis-bold: \
+	out/clavis-bold.yaff \
+	out/clavis-bold.cpi
 
 
 out/%.cpi: out/%.yaff
