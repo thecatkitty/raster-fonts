@@ -16,9 +16,11 @@ make
 Clavis Regular font created initially for my own operating system project.
 Currently it supports only `437` (US-ASCII) and `852` (DOS-Central Europe) code pages.
 
+![Clavis Regular 16 / Jackdaws love my big sphinx of quartz / Zażółć gęślą jaźń. 0123456789](docs/sample-clavis.png)
+
 Clavis Bold variant only supports `852` (DOS-Central Europe) code page.
 
-![Clavis Regular Font on MS-DOS 8](docs/screenshot-claviseg-msdos8.png)
+![Clavis Bold 16 / Jackdaws love my big sphinx of quartz / Zażółć gęślą jaźń. 0123456789](docs/sample-clavis-bold.png)
 
 ## Installation in MS-DOS
 Copy `clavis.cpi` to the DOS files path (`C:\DOS` in this example) and then add these lines to `autoexec.bat`:
