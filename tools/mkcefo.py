@@ -6,6 +6,8 @@ import sys
 
 from collections import defaultdict
 
+from cefo import *
+
 
 class GlyphSource:
     filename: str
@@ -99,9 +101,9 @@ class BitmapFont:
 
     class _Iterator:
         _i: int
-        _font: object
+        _font: 'BitmapFont'
 
-        def __init__(self, font: object) -> None:
+        def __init__(self, font: 'BitmapFont') -> None:
             self._i = 0
             self._font = font
 
@@ -141,66 +143,30 @@ class BitmapFont:
         return result
 
 
-class FontFile:
-    filename: str
-    bitmap: bytearray
-    full_blocks: list[GlyphBlock]
-    sparse_blocks: list[GlyphBlock]
-
-    def __init__(self, font: BitmapFont, filename: str) -> None:
-        self.filename = filename
-        self.bitmap = font.to_bitmap()
-
-        blocks = font.get_blocks()
-        self.full_blocks = [block for block in blocks if len(block) == 16]
-        self.sparse_blocks = [block for block in blocks if len(block) < 16]
-
-    def write(self) -> None:
-        fblk = bytearray()
-        for block in self.full_blocks:
-            offset = font.get_offset(block.prefix << 4)
-            fblk.extend(((offset << 12) | block.prefix).to_bytes(4, "little"))
-            fblk.extend(sum([len(block.glyphs[i]) << (4 * i)
-                        for i in range(8)]).to_bytes(4, "little"))
-            fblk.extend(sum([len(block.glyphs[i]) << (4 * i - 32)
-                        for i in range(8, 16)]).to_bytes(4, "little"))
-
-        sblk = bytearray()
-        sparse_glyph_offset = 0
-        for block in self.sparse_blocks:
-            offset = font.get_offset((block.prefix << 4) | (
-                block.glyphs[0].codepoint & 0xF))
-            sblk.extend(
-                ((len(block) << 12) | block.prefix).to_bytes(2, "little"))
-            sblk.extend(offset.to_bytes(2, "little"))
-            sblk.extend(sparse_glyph_offset.to_bytes(2, "little"))
-            sparse_glyph_offset += len(block)
-
-        sgly = bytes(((glyph.codepoint & 0xF) << 4) | len(glyph.bitmap)
-                     for block in self.sparse_blocks for glyph in block.glyphs)
-
-        chunks = [
-            (fourcc, data + b"\0" if len(data) % 2 else data)
-            for fourcc, data in [(b"fblk", fblk), (b"sblk", sblk), (b"sgly", sgly), (b"bmp ", self.bitmap)]
-        ]
-
-        with open(self.filename, "wb") as out:
-            out.write(b"RIFF")
-            out.write((sum(len(data) + 8 for _, data in chunks) +
-                      4).to_bytes(4, "little"))
-            out.write(b"CeFo")
-
-            for fourcc, data in chunks:
-                out.write(fourcc)
-                out.write(len(data).to_bytes(4, "little"))
-                out.write(data)
-
-
 directory = sys.argv[1] if len(sys.argv) > 1 else "."
 sources = [GlyphSource(file) for file in glob.glob(directory + "*.png")]
 for source in sources:
     print(source)
 
 font = BitmapFont(sources)
-out = FontFile(font, "{}{}.cefo".format(font.name, font.size))
-out.write()
+
+cefo = CelonesFont()
+cefo.bitmap = font.to_bitmap()
+
+for block in font.get_blocks():
+    cefo_block: GlyphBlockBase
+    if len(block) == 16:
+        cefo_block = FullGlyphBlock()
+        cefo_block.offset = font.get_offset(block.prefix << 4)
+        cefo_block.widths = [len(glyph) for glyph in block.glyphs]
+    else:
+        cefo_block = SparseGlyphBlock()
+        cefo_block.offset = font.get_offset(
+            (block.prefix << 4) | (block.glyphs[0].codepoint & 0xF))
+        cefo_block.widths = [(glyph.codepoint & 0xF, len(glyph)) for glyph in block.glyphs]
+
+    cefo_block.prefix = block.prefix
+    cefo.blocks[block.prefix] = cefo_block
+    print(cefo_block)
+
+cefo.store("{}{}.cefo".format(font.name, font.size))
