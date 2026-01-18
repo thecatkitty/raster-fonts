@@ -12,6 +12,8 @@ pip install -r requirements.txt
 make
 ```
 
+Output font files (BDF, CPI, and CeFo) are placed in the `out` subdirectory.
+
 # Clavis
 Clavis Regular font created initially for my own operating system project.
 Currently it supports only `437` (US-ASCII) and `852` (DOS-Central Europe) code pages.
