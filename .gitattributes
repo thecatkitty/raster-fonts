@@ -1,0 +1,3 @@
+*.yaff linguist-detectable=true
+*.yaff linguist-documentation=false
+*.yaff linguist-language=text
