@@ -1,6 +1,9 @@
 ---
 name: Gidotto 8
+family: Gidotto
 spacing: proportional
+style: sans serif
+weight: regular
 bounding-box: 7x8
 line-height: 9
 right-bearing: 1

@@ -12,7 +12,7 @@ pip install -r requirements.txt
 make
 ```
 
-Output font files (BDF, CPI, and CeFo) are placed in the `out` subdirectory.
+Output font files (BDF, CPI, Windows FON, and CeFo) are placed in the `out` subdirectory.
 
 # Clavis
 Clavis Regular font created initially for my own operating system project.

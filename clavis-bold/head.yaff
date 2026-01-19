@@ -1,6 +1,9 @@
 ---
 name: Clavis Bold 16
+family: Clavis Bold
 spacing: character-cell
+style: modern
+weight: bold
 cell-size: 8x16
 author: Mateusz Karcz
 foundry: Celones

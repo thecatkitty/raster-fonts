@@ -1,6 +1,9 @@
 ---
 name: Clavis Regular 16
+family: Clavis Regular
 spacing: character-cell
+style: modern
+weight: regular
 cell-size: 8x16
 author: Mateusz Karcz
 foundry: Celones
