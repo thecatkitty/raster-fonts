@@ -119,8 +119,6 @@ parser.add_argument("output", help="output Celones Font file")
 args = parser.parse_args()
 
 source = GlyphSource(args.input)
-print(source)
-
 font = BitmapFont(source)
 
 cefo = CelonesFont()
@@ -141,6 +139,5 @@ for block in font.get_blocks():
 
     cefo_block.prefix = block.prefix
     cefo.blocks[block.prefix] = cefo_block
-    print(cefo_block)
 
 cefo.store(args.output)

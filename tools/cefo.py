@@ -195,9 +195,3 @@ class CelonesFont:
             start += width
 
         return b""
-
-    def print(self, text: str) -> bytearray:
-        try:
-            return bytearray(b"\0".join(self[ord(c)] for c in text))
-        except MemoryError:
-            return None # type: ignore
