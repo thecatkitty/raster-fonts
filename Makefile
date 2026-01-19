@@ -1,37 +1,43 @@
+SIL ?= @
+
+CEFO  = python3 tools/yaff2cefo.py
+CONV  = monobit-convert
+MKDIR = mkdir -p
+
+
 all: clavis clavis-bold gidotto
 
 clean:
-	rm -rf out
+	@rm -rf out
 
 
-clavis: \
-	out/clavis.yaff \
-	out/clavis.bdf \
-	out/clavis.cpi
+font_target = $1: $(addprefix out/$1,.yaff $2)
 
-clavis-bold: \
-	out/clavis-bold.yaff \
-	out/clavis-bold.bdf \
-	out/clavis-bold.cpi
-
-gidotto: \
-	out/gidotto.yaff \
-	out/gidotto.bdf \
-	out/gidotto.cefo
+$(call font_target,clavis,.bdf .cpi)
+$(call font_target,clavis-bold,.bdf .cpi)
+$(call font_target,gidotto,.bdf .cefo)
 
 
-out/%.bdf: out/%.yaff
-	@mkdir -p $(@D)
-	monobit-convert $< to $@ -overwrite
+out/%.bdf: out/%.yaff | out/.
+	@echo "CONV  $(@F)"
+	$(SIL)$(CONV) $< to $@ -overwrite
 
-out/%.cefo: out/%.yaff
-	@mkdir -p $(@D)
-	python3 tools/yaff2cefo.py $< $@
+out/%.cefo: out/%.yaff | out/.
+	@echo "CEFO  $(@F)"
+	$(SIL)$(CEFO) $< $@
 
-out/%.cpi: out/%.yaff
-	@mkdir -p $(@D)
-	monobit-convert $< to $@ -overwrite `cat $(basename $(notdir $@))/cpi.args`
+out/%.cpi: out/%.yaff | out/.
+	@echo "CONV  $(@F)"
+	$(SIL)$(CONV) $< to $@ -overwrite `cat $(basename $(@F))/cpi.args`
 
-out/%.yaff: %/head.yaff %/*-*.yaff
-	@mkdir -p $(@D)
-	cat $^ > $@
+
+out/%.yaff: %/head.yaff $(sort %/*-*.yaff) | out/.
+	@echo "BUILD $(@F)"
+	$(SIL)cat $^ > $@
+
+
+.PRECIOUS: out/.
+
+%/.:
+	@echo "MKDIR $(@D)"
+	$(SIL)$(MKDIR) $(@D)
