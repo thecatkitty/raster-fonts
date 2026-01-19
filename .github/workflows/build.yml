@@ -18,11 +18,12 @@ jobs:
         run: |
           python3 -m venv venv
           . venv/bin/activate
-          echo PATH=$PATH >> $GITHUB_ENV
           pip install -r requirements.txt
 
       - name: Build font binaries
-        run: make
+        run: |
+          . venv/bin/activate
+          make clean && make all
 
       - name: Package Clavis
         uses: actions/upload-artifact@v6

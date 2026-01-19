@@ -4,8 +4,12 @@ CEFO  = python3 tools/yaff2cefo.py
 CONV  = monobit-convert
 MKDIR = mkdir -p
 
+FONTS = clavis clavis-bold gidotto
 
-all: clavis clavis-bold gidotto
+
+.PHONY: all clean $(FONTS)
+
+all: $(FONTS)
 
 clean:
 	@rm -rf int out
