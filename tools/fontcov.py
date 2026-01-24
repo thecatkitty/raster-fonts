@@ -100,6 +100,8 @@ parser = ArgumentParser(
 parser.add_argument("input", help="input font file")
 parser.add_argument("--cp", type=int, nargs="*", default=list(),
                     help="code pages to measure against (none for Unicode block coverage)")
+parser.add_argument("--md", action="store_true",
+                    help="output as Markdown table")
 args = parser.parse_args()
 
 pack: monobit.Pack = monobit.load(args.input)
@@ -109,5 +111,16 @@ report = list(get_block_coverage(font.glyphs) if len(args.cp) ==
               0 else get_codepage_coverage(font.glyphs, args.cp))
 width = max(len(block) for block, _, _ in report)
 
-for block, count, total in report:
-    print(f"{block:{width}s}  {count:5d}/{total:<5d}  {100 * count / total:5.1f}%")
+if args.md:
+    column_title = "Unicode block" if len(args.cp) == 0 else "Character set"
+    width = max(width, len(column_title))
+    print(f"| {column_title:{width}s} | {'Coverage':>19s} |")
+    print("| " + (width * "-") + " | " + (19 * "-") + " |")
+
+    for block, count, total in report:
+        coverage = f"{100 * count / total:.1f}% ({count}/{total})"
+        print(f"| {block:{width}s} | {coverage:>19s} |")
+
+else:
+    for block, count, total in report:
+        print(f"{block:{width}s}  {count:5d}/{total:<5d}  {100 * count / total:5.1f}%")
