@@ -98,7 +98,7 @@ class BitmapFont:
 
     def get_blocks(self) -> list[GlyphBlock]:
         blocks = defaultdict(list)
-        for glyph in font:
+        for glyph in self:
             blocks[glyph.codepoint >> 4].append(glyph)
 
         return [GlyphBlock(v) for v in blocks.values()]
