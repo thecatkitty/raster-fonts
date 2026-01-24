@@ -2,17 +2,20 @@ SIL ?= @
 
 CEFO  = python3 tools/yaff2cefo.py
 CONV  = monobit-convert
+CVRGE = python3 tools/fontcov.py
 MKDIR = mkdir -p
 
 FONTS = clavis clavis-bold gidotto
 
 
-.PHONY: all clean $(FONTS)
+.PHONY: all clean $(FONTS) coverage
 
-all: $(FONTS)
+all: $(FONTS) coverage
 
 clean:
 	@rm -rf int out
+
+coverage: out/coverage.md
 
 
 font_target = $1: $(addprefix out/$1,.yaff $2)
@@ -37,6 +40,15 @@ out/%.cpi: out/%.yaff | out/.
 out/%.fon: int/%.yaff | out/.
 	@echo "CONV  $(@F)"
 	$(SIL)$(CONV) $< to $@ -overwrite -format=mzfon
+
+
+out/coverage.md: $(addprefix out/$1,$(addsuffix .yaff,$(FONTS)))
+	@echo "CVRGE $(@F)"
+	$(SIL)echo "## Unicode coverage" > $@
+	$(SIL)$(CVRGE) $^ --md >> $@
+	$(SIL)echo >> $@
+	$(SIL)echo "## Code page coverage" >> $@
+	$(SIL)$(CVRGE) $^ --cp 437 852 1250 1252 --md >> $@
 
 
 define subcp_target
