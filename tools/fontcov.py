@@ -5,7 +5,7 @@ import unicodedata
 
 from argparse import ArgumentParser
 from collections import Counter
-from typing import Iterable
+from typing import Iterable, NamedTuple
 from unidata_blocks import get_block_by_code_point
 
 
@@ -71,56 +71,98 @@ def get_block_counts(codepoints: Iterable[int]) -> Counter[str]:
                    if cp is not None)
 
 
-def get_codepage_counts(glyphs: Iterable[monobit.Glyph], codepage: int) -> tuple[int, int]:
+def get_codepoint_table(codepage: int) -> str:
     encoding = importlib.import_module(f"encodings.cp{codepage}")
-    table = patch_ibm_codepage(
-        encoding.decoding_table) if codepage in IBMGRAPH_CODEPAGES else encoding.decoding_table
-    total = len(set(filter(is_printable, (ord(char) for char in table))))
+    return patch_ibm_codepage(encoding.decoding_table) if codepage in IBMGRAPH_CODEPAGES else encoding.decoding_table
+
+
+def get_codepage_count(glyphs: Iterable[monobit.Glyph], codepage: int) -> int:
+    table = get_codepoint_table(codepage)
     count = sum(chr(cp) in table for cp in codepoints_from_glyphs(glyphs))
-    return count, total
+    return count
+
+
+def get_codepage_total(codepage: int) -> int:
+    table = get_codepoint_table(codepage)
+    total = len(set(filter(is_printable, (ord(char) for char in table))))
+    return total
 
 
 # Coverage statistics
-def get_block_coverage(glyphs: Iterable[monobit.Glyph]) -> Iterable[tuple[str, int, int]]:
+class CoverageReport(NamedTuple):
+    block: str
+    counts: list[int]
+    total: int
+
+
+def get_block_coverage(glyph_sets: Iterable[Iterable[monobit.Glyph]]) -> Iterable[CoverageReport]:
     unicode_blocks = get_block_counts(range(sys.maxunicode + 1))
-    for block, count in get_block_counts(codepoints_from_glyphs(glyphs)).items():
-        yield block, count, unicode_blocks[block]
+    glyph_set_counts = list(
+        map(get_block_counts, map(codepoints_from_glyphs, glyph_sets)))
+
+    for block, count in unicode_blocks.items():
+        counts = list(glyph_set_count[block]
+                      if block in glyph_set_count else 0
+                      for glyph_set_count in glyph_set_counts)
+        if sum(counts) > 0:
+            yield CoverageReport(block, counts, count)
 
 
-def get_codepage_coverage(glyphs: Iterable[monobit.Glyph], codepages: list[int]) -> Iterable[tuple[str, int, int]]:
+def get_codepage_coverage(glyph_sets: Iterable[Iterable[monobit.Glyph]], codepages: list[int]) -> Iterable[CoverageReport]:
     for number in codepages:
-        count, total = get_codepage_counts(glyphs, number)
-        yield f"CP{number}", count, total
+        total = get_codepage_total(number)
+        counts = [get_codepage_count(glyphs, number) for glyphs in glyph_sets]
+        yield CoverageReport(f"CP{number}", counts, total)
 
 
 # Main script
 parser = ArgumentParser(
     description="Utility for measuring font charset coverage",
     epilog="Copyright (c) Mateusz Karcz, 2026. Shared under the MIT License.")
-parser.add_argument("input", help="input font file")
+parser.add_argument("input", nargs="*", help="input font files")
 parser.add_argument("--cp", type=int, nargs="*", default=list(),
                     help="code pages to measure against (none for Unicode block coverage)")
 parser.add_argument("--md", action="store_true",
                     help="output as Markdown table")
 args = parser.parse_args()
 
-pack: monobit.Pack = monobit.load(args.input)
-font: monobit.Font = pack.get(0)
+packs = map(monobit.load, args.input)
+fonts: list[monobit.Font] = list(map(lambda pack: pack.get(0), packs))
+glyph_sets = list(map(lambda font: font.glyphs, fonts))
 
-report = list(get_block_coverage(font.glyphs) if len(args.cp) ==
-              0 else get_codepage_coverage(font.glyphs, args.cp))
+report = list(get_block_coverage(glyph_sets) if len(args.cp) ==
+              0 else get_codepage_coverage(glyph_sets, args.cp))
 width = max(len(block) for block, _, _ in report)
 
 if args.md:
-    column_title = "Unicode block" if len(args.cp) == 0 else "Character set"
-    width = max(width, len(column_title))
-    print(f"| {column_title:{width}s} | {'Coverage':>19s} |")
-    print("| " + (width * "-") + " | " + (19 * "-") + " |")
+    first_title = "Unicode block" if len(args.cp) == 0 else "Character set"
+    first_width = max(width, len(first_title))
+    titles = ["Coverage"] if len(fonts) == 1 else [
+        font.family for font in fonts]
+    widths = list(map(len, titles))
 
-    for block, count, total in report:
-        coverage = f"{100 * count / total:.1f}% ({count}/{total})"
-        print(f"| {block:{width}s} | {coverage:>19s} |")
+    print(f"| {first_title:{width}s} |", end="")
+    for title, width in zip(titles, widths):
+        print(f" {title:>{max(19, width)}s} |", end="")
+    print()
+
+    print("| " + (first_width * "-") + " |", end="")
+    for width in widths:
+        print(" " + (max(19, width) * "-") + " |", end="")
+    print()
+
+    for block, counts, total in report:
+        print(f"| {block:{first_width}s} |", end="")
+        for count in counts:
+            coverage = "-" if count == 0 else f"{100 * count / total:.1f}% ({count}/{total})"
+            print(f" {coverage:>19s} |", end="")
+        print()
 
 else:
-    for block, count, total in report:
-        print(f"{block:{width}s}  {count:5d}/{total:<5d}  {100 * count / total:5.1f}%")
+    for i, font in enumerate(fonts):
+        print(font.family)
+        for block, counts, total in report:
+            if counts[i] > 0:
+                print(
+                    f"\t{block:{width}s}  {counts[i]:5d}/{total:<5d}  {100 * counts[i] / total:5.1f}%")
+        print()
